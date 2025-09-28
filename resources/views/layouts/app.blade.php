@@ -3,26 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Konseling</title>
+    <title>Konseling App</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .sidebar {
+            min-height: 100vh;
+            background: #343a40;
+            color: white;
+            padding-top: 20px;
+        }
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 10px 15px;
+        }
+        .sidebar a:hover {
+            background: #495057;
+        }
+        .content {
+            margin-left: 220px;
+            padding: 20px;
+        }
+        .navbar-brand {
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
+
+    {{-- Top Navbar --}}
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-fluid">
             <a class="navbar-brand" href="{{ url('/dashboard') }}">Konseling App</a>
-            <div class="ms-auto text-white">
+            <span class="navbar-text text-white">
                 @auth
-                    {{ auth()->user()->name }} ({{ auth()->user()->role }})
+                    {{ Auth::user()->name }} ({{ Auth::user()->role }})
                 @endauth
-            </div>
+            </span>
         </div>
     </nav>
 
-    <main class="py-4">
-        @yield('content')
-    </main>
+    <div class="d-flex">
+        {{-- Sidebar --}}
+        <div class="sidebar">
+            <a href="{{ url('/dashboard') }}">📊 Dashboard</a>
+            <a href="{{ url('/siswa') }}">👨‍🎓 Data Siswa</a>
+            <a href="{{ url('/guru-wali') }}">👨‍🏫 Data Guru Wali</a>
+            <a href="{{ url('/bimbingan') }}">📖 Data Bimbingan</a>
+            <a href="{{ url('/jenis-bimbingan') }}">📝 Jenis Bimbingan</a>
+        </div>
+
+        {{-- Content --}}
+        <div class="content w-100">
+            @yield('content')
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    @stack('scripts')
 </body>
 </html>

@@ -3,50 +3,70 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bimbingan;
+use App\Models\Siswa;
+use App\Models\GuruWali;
+use App\Models\JenisBimbingan;
 use Illuminate\Http\Request;
 
 class BimbinganController extends Controller
 {
     public function index()
     {
-        return Bimbingan::with(['siswa', 'guruWali', 'jenisBimbingan'])->get();
+        $bimbingan = Bimbingan::with(['siswa','guruWali','jenisBimbingan'])->paginate(10);
+        return view('bimbingan.index', compact('bimbingan'));
+    }
+
+    public function create()
+    {
+        $siswa = Siswa::all();
+        $guru = GuruWali::all();
+        $jenis = JenisBimbingan::all();
+        return view('bimbingan.create', compact('siswa','guru','jenis'));
     }
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'siswa_id' => 'required|exists:siswas,id',
-            'guru_wali_id' => 'required|exists:guru_walis,id',
-            'jenis_bimbingan_id' => 'required|exists:jenis_bimbingans,id',
-            'deskripsi' => 'required|string',
+        $request->validate([
+            'siswa_id' => 'required',
+            'guru_wali_id' => 'required',
+            'jenis_bimbingan_id' => 'required',
+            'deskripsi' => 'required',
             'tanggal' => 'required|date',
         ]);
 
-        return Bimbingan::create($data);
+        Bimbingan::create($request->all());
+        return redirect()->route('bimbingan.index')->with('success', 'Bimbingan berhasil ditambahkan');
     }
 
-    public function show(Bimbingan $bimbingan)
+    public function edit($id)
     {
-        return $bimbingan->load(['siswa', 'guruWali', 'jenisBimbingan']);
+        $bimbingan = Bimbingan::findOrFail($id);
+        $siswa = Siswa::all();
+        $guru = GuruWali::all();
+        $jenis = JenisBimbingan::all();
+        return view('bimbingan.edit', compact('bimbingan','siswa','guru','jenis'));
     }
 
-    public function update(Request $request, Bimbingan $bimbingan)
+    public function update(Request $request, $id)
     {
-        $data = $request->validate([
-            'siswa_id' => 'sometimes|exists:siswas,id',
-            'guru_wali_id' => 'sometimes|exists:guru_walis,id',
-            'jenis_bimbingan_id' => 'sometimes|exists:jenis_bimbingans,id',
-            'deskripsi' => 'sometimes|string',
-            'tanggal' => 'sometimes|date',
+        $bimbingan = Bimbingan::findOrFail($id);
+
+        $request->validate([
+            'siswa_id' => 'required',
+            'guru_wali_id' => 'required',
+            'jenis_bimbingan_id' => 'required',
+            'deskripsi' => 'required',
+            'tanggal' => 'required|date',
         ]);
 
-        $bimbingan->update($data);
-        return $bimbingan;
+        $bimbingan->update($request->all());
+        return redirect()->route('bimbingan.index')->with('success', 'Bimbingan berhasil diperbarui');
     }
 
-    public function destroy(Bimbingan $bimbingan)
+    public function destroy($id)
     {
+        $bimbingan = Bimbingan::findOrFail($id);
         $bimbingan->delete();
-        return response()->noContent();
+        return redirect()->route('bimbingan.index')->with('success', 'Bimbingan berhasil dihapus');
     }
 }

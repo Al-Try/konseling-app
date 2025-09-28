@@ -1,34 +1,48 @@
-@extends('layouts.guru')
-
-@section('title', 'Riwayat Bimbingan')
+@extends('layouts.app')
 
 @section('content')
-<h2>Riwayat Bimbingan</h2>
+<div class="container">
+    <h2>Data Bimbingan</h2>
+    <a href="{{ route('bimbingan.create') }}" class="btn btn-primary mb-3">+ Tambah Bimbingan</a>
 
-@if(session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
-@endif
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
 
-<table class="table table-bordered">
-    <thead class="table-dark">
-        <tr>
-            <th>No</th>
-            <th>Siswa</th>
-            <th>Jenis</th>
-            <th>Tanggal</th>
-            <th>Catatan</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach($bimbingans as $b)
-        <tr>
-            <td>{{ $loop->iteration }}</td>
-            <td>{{ $b->siswa->nama_siswa }}</td>
-            <td>{{ $b->jenis->nama_jenis }}</td>
-            <td>{{ $b->tanggal }}</td>
-            <td>{{ $b->catatan }}</td>
-        </tr>
-        @endforeach
-    </tbody>
-</table>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>Siswa</th>
+                <th>Guru Wali</th>
+                <th>Jenis Bimbingan</th>
+                <th>Deskripsi</th>
+                <th>Tanggal</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($bimbingan as $index => $item)
+                <tr>
+                    <td>{{ $index + 1 }}</td>
+                    <td>{{ $item->siswa->nama ?? '-' }}</td>
+                    <td>{{ $item->guruWali->nama ?? '-' }}</td>
+                    <td>{{ $item->jenisBimbingan->nama ?? '-' }}</td>
+                    <td>{{ $item->deskripsi }}</td>
+                    <td>{{ $item->tanggal }}</td>
+                    <td>
+                        <a href="{{ route('bimbingan.edit', $item->id) }}" class="btn btn-warning btn-sm">Edit</a>
+                        <form action="{{ route('bimbingan.destroy', $item->id) }}" method="POST" style="display:inline;">
+                            @csrf
+                            @method('DELETE')
+                            <button class="btn btn-danger btn-sm" onclick="return confirm('Yakin hapus bimbingan ini?')">Hapus</button>
+                        </form>
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+
+    {{ $bimbingan->links() }}
+</div>
 @endsection

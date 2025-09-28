@@ -4,40 +4,69 @@ namespace App\Http\Controllers;
 
 use App\Models\GuruWali;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 
 class GuruWaliController extends Controller
 {
     public function index()
     {
-        return GuruWali::all();
+        $guru = GuruWali::paginate(10);
+        return view('guru_wali.index', compact('guru'));
+    }
+
+    public function create()
+    {
+        return view('guru_wali.create');
     }
 
     public function store(Request $request)
     {
-        $data = $request->all();
-        $data['password'] = Hash::make($request->password);
-        return GuruWali::create($data);
+        $request->validate([
+            'nama' => 'required',
+            'nip' => 'required|unique:guru_walis',
+            'email' => 'required|email|unique:guru_walis',
+            'password' => 'required|min:6',
+        ]);
+
+        GuruWali::create([
+            'nama' => $request->nama,
+            'nip' => $request->nip,
+            'email' => $request->email,
+            'password' => bcrypt($request->password),
+        ]);
+
+        return redirect()->route('guru-wali.index')->with('success', 'Guru wali berhasil ditambahkan');
     }
 
-    public function show($id)
+    public function edit($id)
     {
-        return GuruWali::findOrFail($id);
+        $guru = GuruWali::findOrFail($id);
+        return view('guru_wali.edit', compact('guru'));
     }
 
     public function update(Request $request, $id)
     {
-        $gw = GuruWali::findOrFail($id);
-        $data = $request->all();
-        if ($request->has('password')) {
-            $data['password'] = Hash::make($request->password);
-        }
-        $gw->update($data);
-        return $gw;
+        $guru = GuruWali::findOrFail($id);
+
+        $request->validate([
+            'nama' => 'required',
+            'nip' => 'required|unique:guru_walis,nip,'.$id,
+            'email' => 'required|email|unique:guru_walis,email,'.$id,
+        ]);
+
+        $guru->update([
+            'nama' => $request->nama,
+            'nip' => $request->nip,
+            'email' => $request->email,
+            'password' => $request->password ? bcrypt($request->password) : $guru->password,
+        ]);
+
+        return redirect()->route('guru-wali.index')->with('success', 'Guru wali berhasil diperbarui');
     }
 
     public function destroy($id)
     {
-        return GuruWali::destroy($id);
+        $guru = GuruWali::findOrFail($id);
+        $guru->delete();
+        return redirect()->route('guru-wali.index')->with('success', 'Guru wali berhasil dihapus');
     }
 }
