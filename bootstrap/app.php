@@ -5,7 +5,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
 return Application::configure(basePath: dirname(__DIR__))
-    ->withMiddleware(function (Middleware $middleware) {
+    ->withMiddleware(function (Illuminate\Foundation\Configuration\Middleware $middleware) {
         // daftar middleware global/alias di sini
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,

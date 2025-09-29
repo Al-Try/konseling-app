@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;   // ✅ ini yang kurang
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -15,16 +15,9 @@ class User extends Authenticatable
 
     public function guruWali()
     {
-        return $this->hasOne(GuruWali::class, 'user_id');
+        return $this->hasOne(GuruWali::class, 'user_id'); // guru_walis.user_id
     }
 
-    public function isAdmin()
-    {
-        return $this->role === 'admin';
-    }
-
-    public function isGuruWali()
-    {
-        return $this->role === 'guru_wali';
-    }
+    public function isAdmin(): bool    { return $this->role === 'admin'; }
+    public function isGuruWali(): bool { return in_array($this->role, ['guru_wali','guru']); }
 }

@@ -9,6 +9,7 @@ class GuruWali extends Model
 {
     use HasFactory;
 
+    protected $table   = 'guru_walis';
     protected $guarded = [];
 
     public function user()
@@ -18,21 +19,11 @@ class GuruWali extends Model
 
     public function kelas()
     {
-        return $this->hasMany(Kelas::class, 'wali_id'); // sesuaikan jika beda
+        return $this->hasMany(Kelas::class, 'wali_id'); // kelas.wali_id
     }
 
-    // ✅ relasi yang diminta controller: bimbingans()
     public function bimbingans()
     {
-        // Ganti 'guru_id' dengan nama kolom FK yang benar di tabel bimbingans kamu:
-        //   - kalau kolomnya 'guru_id'  → gunakan 'guru_id'
-        //   - kalau kolomnya 'guru_wali_id' → gunakan 'guru_wali_id'
-        return $this->hasMany(Bimbingan::class, 'guru_id');
-    }
-
-    // (opsional) relasi alias kalau ada kode lama pakai nama lain
-    public function bimbingan()
-    {
-        return $this->bimbingans();
+        return $this->hasMany(Bimbingan::class, 'guru_id'); // bimbingans.guru_id
     }
 }

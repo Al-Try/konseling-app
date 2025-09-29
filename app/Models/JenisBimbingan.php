@@ -2,14 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class JenisBimbingan extends Model
 {
-    protected $fillable = ['nama_jenis','deskripsi','poin'];
+    use \Illuminate\Database\Eloquent\Factories\HasFactory;
 
-    public function bimbingans()
-    {
-        return $this->hasMany(Bimbingan::class, 'jenis_id');
-    }
+    protected $table = 'jenis_bimbingans';
+    protected $fillable = ['nama_jenis','tipe','poin'];
 }
