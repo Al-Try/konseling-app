@@ -2,26 +2,37 @@
 
 namespace App\Models;
 
-use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
-class GuruWali extends Authenticatable
+class GuruWali extends Model
 {
-    protected $fillable = [
-        'nama',
-        'nip',
-        'email',
-        'password'
-    ];
+    use HasFactory;
 
-    // Relasi ke kelas (satu guru wali punya satu kelas)
-    public function kelas()
+    protected $guarded = [];
+
+    public function user()
     {
-        return $this->hasOne(Kelas::class, 'wali_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
-    // Relasi ke bimbingan (satu guru wali bisa punya banyak bimbingan)
+    public function kelas()
+    {
+        return $this->hasMany(Kelas::class, 'wali_id'); // sesuaikan jika beda
+    }
+
+    // ✅ relasi yang diminta controller: bimbingans()
     public function bimbingans()
     {
+        // Ganti 'guru_id' dengan nama kolom FK yang benar di tabel bimbingans kamu:
+        //   - kalau kolomnya 'guru_id'  → gunakan 'guru_id'
+        //   - kalau kolomnya 'guru_wali_id' → gunakan 'guru_wali_id'
         return $this->hasMany(Bimbingan::class, 'guru_id');
+    }
+
+    // (opsional) relasi alias kalau ada kode lama pakai nama lain
+    public function bimbingan()
+    {
+        return $this->bimbingans();
     }
 }

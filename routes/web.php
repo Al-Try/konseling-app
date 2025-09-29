@@ -1,36 +1,37 @@
 <?php
-
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\SiswaController;
-use App\Http\Controllers\KelasController;
-use App\Http\Controllers\BimbinganController;
-use App\Http\Controllers\GuruWaliController;
+// === DEV ONLY: bypass login ===
+if (app()->environment('local')) {
 
-Route::get('/', fn () => view('welcome'));
+    // login sebagai ADMIN (asumsikan user id=1 adalah admin)
+    Route::get('/dev/as-admin', function () {
+        Auth::loginUsingId(1);           // ganti 1 dengan id admin di tabel users
+        request()->session()->regenerate();
+        return redirect('/admin/dashboard');
+    });
 
-// Semua route berikut hanya untuk user yang sudah login
-Route::middleware('auth')->group(function () {
-    // Dashboard umum (opsional, kalau mau /dashboard tetap ada)
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    // login sebagai GURU WALI (asumsikan user id=2 adalah guru wali)
+    Route::get('/dev/as-guru', function () {
+        Auth::loginUsingId(2);           // ganti 2 dengan id guru wali
+        request()->session()->regenerate();
+        return redirect('/guru/dashboard');
+    });
 
-    // ===== ADMIN =====
-    Route::middleware('role:admin')
-        ->prefix('admin')
-        ->name('admin.')
-        ->group(function () {
-            Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-            Route::resource('siswa', SiswaController::class);
-            Route::resource('kelas', KelasController::class);
-            Route::resource('guru-wali', GuruWaliController::class);
-        });
+    // logout cepat
+    Route::get('/dev/logout', function () {
+        Auth::logout();
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
+        return 'Logged out (DEV)';
+    });
+}
+if (app()->environment('local')) {
 
-    // ===== GURU WALI =====
-    Route::middleware('role:guru_wali')
-        ->prefix('guru')
-        ->name('guru.')
-        ->group(function () {
-            Route::get('/dashboard', fn () => view('dashboard.guru'))->name('dashboard');
-            Route::resource('bimbingan', BimbinganController::class)->only(['index', 'create', 'store']);
-        });
-});
+    Route::get('/dev/admin/dashboard', [DashboardController::class, 'index'])
+        ->withoutMiddleware(['auth', 'role:admin']);
+
+    // kalau mau: guru dashboard UI langsung
+    Route::view('/dev/guru/dashboard', 'guru_wali.index');
+}
