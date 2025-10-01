@@ -9,16 +9,9 @@ class Siswa extends Model
 {
     use HasFactory;
 
-    protected $table   = 'siswas';
-    protected $guarded = [];
+    protected $fillable = ['nis','nama_siswa','kelas_id','jk','alamat','no_hp','orang_tua'];
 
-    public function kelas()
-    {
-        return $this->belongsTo(Kelas::class, 'kelas_id'); // siswas.kelas_id
-    }
-
-    public function bimbingans()
-    {
-        return $this->hasMany(Bimbingan::class, 'siswa_id'); // bimbingans.siswa_id
-    }
+    public function kelas() { return $this->belongsTo(Kelas::class); }
+    public function bimbingans() { return $this->hasMany(Bimbingan::class, 'siswa_id'); }
 }
+

@@ -19,14 +19,13 @@ class KonselingStoreRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
-    public function rules(): array
-    {
+    public function rules(): array {
         return [
-            'siswa_id'  => ['required','exists:siswas,id'],
-            'jenis_id'  => ['required','exists:jenis_bimbingans,id'],
-            'tanggal'   => ['required','date'],
-            'jam'       => ['nullable','date_format:H:i'],
-            'catatan'   => ['nullable','string','max:1000'],
+            'siswa_id' => ['required','exists:siswas,id'],
+            'jenis_id' => ['required','exists:jenis_bimbingans,id'],
+            'tanggal'  => ['required','date'],
+            'jam'      => ['nullable','date_format:H:i'],
+            'catatan'  => ['nullable','string','max:1000'],
         ];
     }
 

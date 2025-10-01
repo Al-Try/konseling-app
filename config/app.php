@@ -16,14 +16,7 @@ return [
     'name' => env('APP_NAME', 'Laravel'),
 
     
-    // config/app.php
-    'providers' => [
-        Barryvdh\DomPDF\ServiceProvider::class,
-    ],
-
-    'aliases' => [
-        'PDF' => Barryvdh\DomPDF\Facade\Pdf::class,
-    ],
+    
 
     /*
     |--------------------------------------------------------------------------

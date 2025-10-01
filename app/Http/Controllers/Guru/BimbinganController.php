@@ -9,45 +9,42 @@ use Illuminate\Support\Facades\Auth;
 
 class BimbinganController extends Controller
 {
-    public function index()
-    {
+    public function index() {
         $gwId = Auth::user()->guruWali?->id;
         $data = Bimbingan::with(['siswa','jenis'])
-            ->where('guru_id', $gwId)
+            ->where('guru_id',$gwId)
             ->latest('tanggal')->paginate(20);
         return view('guru.bimbingan.index', compact('data'));
     }
 
-    public function create()
-    {
+    public function create() {
         $jenis = JenisBimbingan::orderBy('nama_jenis')->get();
         return view('guru.bimbingan.form', compact('jenis'));
     }
 
-    public function store(KonselingStoreRequest $req)
-    {
+    public function store(KonselingStoreRequest $r) {
         $gwId  = Auth::user()->guruWali?->id;
-        $jenis = JenisBimbingan::findOrFail($req->jenis_id);
+        $jenis = JenisBimbingan::findOrFail($r->jenis_id);
 
         Bimbingan::create([
-            'guru_id'   => $gwId,
-            'siswa_id'  => $req->siswa_id,
-            'jenis_id'  => $req->jenis_id,
-            'tanggal'   => $req->tanggal,
-            'jam'       => $req->jam ?? now()->format('H:i:s'),
-            'catatan'   => $req->catatan,
-            'poin'      => $jenis->poin, // opsional kalau kolom ini ada
+            'guru_id'  => $gwId,
+            'siswa_id' => $r->siswa_id,
+            'jenis_id' => $r->jenis_id,
+            'tanggal'  => $r->tanggal,
+            'jam'      => $r->jam ?? now()->format('H:i:s'),
+            'catatan'  => $r->catatan,
+            'poin'     => $jenis->poin, // simpan poin default
         ]);
 
-        return redirect()->route('guru.bimbingan.index')->with('ok','Tersimpan');
+        return to_route('guru.bimbingan.index')->with('ok','Tersimpan');
     }
 
-    // --- API untuk autocomplete siswa di kelas guru wali ---
-    public function siswaSearch()
-    {
-        $kelasIds = Auth::user()->guruWali?->kelas()->pluck('id'); // jika relasi wali->kelas() sudah ada
+    // autocomplete siswa milik kelas yang diampu guru wali
+    public function siswaSearch() {
+        $kelasIds = Auth::user()->guruWali?->kelas()->pluck('id') ?? [];
         $q = request('q','');
-        $siswa = Siswa::whereIn('kelas_id', $kelasIds ?: [])
+
+        $siswa = Siswa::whereIn('kelas_id', $kelasIds)
             ->when($q, fn($qq)=>$qq->where('nama_siswa','like',"%$q%"))
             ->limit(20)->get(['id','nama_siswa']);
 

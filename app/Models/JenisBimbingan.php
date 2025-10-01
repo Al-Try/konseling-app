@@ -7,8 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class JenisBimbingan extends Model
 {
-    use \Illuminate\Database\Eloquent\Factories\HasFactory;
+    use HasFactory;
 
-    protected $table = 'jenis_bimbingans';
-    protected $fillable = ['nama_jenis','tipe','poin'];
+    protected $fillable = ['nama_jenis','tipe','poin']; // tipe: positif|negatif
+    public function bimbingans() { return $this->hasMany(Bimbingan::class, 'jenis_id'); }
 }
+

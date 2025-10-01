@@ -9,28 +9,21 @@ use Illuminate\Support\Facades\DB;
 
 class LaporanController extends Controller
 {
-    // Rekap per siswa
-    public function siswa($siswaId)
-    {
+    public function rekapSiswa($siswaId) {
         $siswa = Siswa::with('kelas')->findOrFail($siswaId);
         $riwayat = Bimbingan::with(['jenis','guruWali.user'])
-            ->where('siswa_id', $siswaId)
-            ->orderByDesc('tanggal')->get();
+            ->where('siswa_id',$siswaId)->orderByDesc('tanggal')->get();
 
-        $pdf = Pdf::loadView('admin.laporan.siswa', compact('siswa','riwayat'));
-        return $pdf->stream("laporan_siswa_{$siswa->id}.pdf");
+        return Pdf::loadView('laporan.rekap_siswa', compact('siswa','riwayat'))
+                  ->stream("laporan_siswa_{$siswa->id}.pdf");
     }
 
-    // Ranking guru wali paling aktif dalam rentang waktu (opsional filter)
-    public function ranking()
-    {
+    public function rankingGuru() {
         $rows = Bimbingan::select('guru_id', DB::raw('COUNT(*) as jml'))
-            ->with('guruWali.user:id,name')
-            ->groupBy('guru_id')
-            ->orderByDesc('jml')
-            ->get();
+            ->with('guruWali.user:id,name')->groupBy('guru_id')
+            ->orderByDesc('jml')->get();
 
-        $pdf = Pdf::loadView('admin.laporan.ranking_guru', compact('rows'));
-        return $pdf->stream("ranking_guru.pdf");
+        return Pdf::loadView('laporan.ranking_guru', compact('rows'))
+                  ->stream("ranking_guru.pdf");
     }
 }
