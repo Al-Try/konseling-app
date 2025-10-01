@@ -3,17 +3,26 @@
 namespace App\Providers;
 
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
-use App\Models\Bimbingan;
-use App\Policies\BimbinganPolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
+    /**
+     * The policy mappings for the application.
+     *
+     * @var array<class-string, class-string>
+     */
     protected $policies = [
-        Bimbingan::class => BimbinganPolicy::class,
+        \App\Models\Bimbingan::class => \App\Policies\BimbinganPolicy::class,
     ];
 
+    /**
+     * Register any authentication / authorization services.
+     */
     public function boot(): void
     {
         $this->registerPolicies();
+
+        // contoh tambahan: Gate
+        // Gate::define('manage-bimbingan', fn($user, $bimbingan) => $user->id === $bimbingan->guru_wali_id);
     }
 }

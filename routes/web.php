@@ -2,79 +2,70 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
-
+use App\Http\Controllers\Admin\SiswaController;
+use App\Http\Controllers\Admin\KonselingController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+// Root: arahkan otomatis
+Route::get('/', function () {
+    if (Auth::check()) {
+        return match (Auth::user()->role) {
+            'admin'     => redirect()->route('admin.dashboard'),
+            'guru_wali' => redirect()->route('guru.dashboard'),
+            default     => redirect()->route('login'),
+        };
+    }
+    return redirect()->route('login');
+});
 
-// ---------------------- PUBLIC ----------------------
-Route::get('/', fn() => view('welcome'));
+// Login / Logout
 Route::get('/login',  [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// /dashboard -> redirect sesuai role (aman kalau mau dipakai)
-Route::middleware('auth')->get('/dashboard', function () {
-    $u = Auth::user();
-    return match ($u->role ?? null) {
-        'admin'     => redirect()->route('admin.dashboard'),
-        'guru_wali' => redirect()->route('guru.dashboard'),
-        default     => view('dashboard.index'),
-    };
-})->name('dashboard');
-
 // ---------------------- ADMIN ----------------------
+
 Route::middleware(['auth','role:admin'])
     ->prefix('admin')->name('admin.')
     ->group(function () {
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])
+            ->name('dashboard');
 
         Route::resource('siswa', \App\Http\Controllers\Admin\SiswaController::class);
-        Route::resource('kelas', \App\Http\Controllers\Admin\KelasController::class);
-        Route::resource('guru-wali', \App\Http\Controllers\Admin\GuruWaliController::class);
 
-        // Jenis Bimbingan (kategori + poin)
-        Route::resource('jenis-bimbingan', \App\Http\Controllers\Admin\JenisBimbinganController::class)
-            ->parameters(['jenis-bimbingan' => 'jenis'])
-            ->names('jenis');
+        // pastikan ini ada kalau dipakai di menu
+        Route::resource('konseling', \App\Http\Controllers\Admin\KonselingController::class)
+            ->only(['index']); // tambahkan create/store/show bila siap
 
-        // Laporan PDF
-        Route::get('/laporan/siswa/{siswa}', [\App\Http\Controllers\Admin\LaporanController::class,'rekapSiswa'])
-            ->name('laporan.siswa');
-        Route::get('/laporan/ranking-guru', [\App\Http\Controllers\Admin\LaporanController::class,'rankingGuru'])
-            ->name('laporan.rankingGuru');
+        Route::resource('jenis', \App\Http\Controllers\Admin\JenisBimbinganController::class)
+            ->parameters(['jenis' => 'jenis'])
+            ->names('jenis')    // menghasilkan admin.jenis.index, dst
+            ->only(['index']);  // tambah create/store bila siap
     });
+
+
 
 // ---------------------- GURU WALI ----------------------
 Route::middleware(['auth','role:guru_wali'])
     ->prefix('guru')->name('guru.')
     ->group(function () {
         Route::get('/dashboard', fn() => view('dashboard.guru'))->name('dashboard');
-
-        Route::get('/bimbingan/siswa/search', [\App\Http\Controllers\Guru\BimbinganController::class,'siswaSearch'])
-            ->name('bimbingan.siswa.search');
-
-        Route::resource('bimbingan', \App\Http\Controllers\Guru\BimbinganController::class)
-            ->only(['index','create','store','show']);
+        // … (routes bimbingan)
     });
 
-// ---------------------- DEV-ONLY ----------------------
+// ---------------------- DEV-ONLY (opsional) ----------------------
 if (app()->environment('local')) {
-    Route::get('/dev/as-admin', function () {
-        Auth::loginUsingId(1); request()->session()->regenerate();
-        return redirect()->route('admin.dashboard');
-    });
-    Route::get('/dev/as-guru', function () {
-        Auth::loginUsingId(2); request()->session()->regenerate();
-        return redirect()->route('guru.dashboard');
-    });
-    Route::get('/dev/logout', function () {
-        Auth::logout(); request()->session()->invalidate(); request()->session()->regenerateToken();
-        return 'Logged out (DEV)';
-    });
-
-    // preview UI tanpa auth jika perlu:
-    Route::get('/dev/admin/dashboard', [DashboardController::class, 'index'])
-        ->withoutMiddleware(['auth','role:admin']);
+    Route::get('/dev/as-admin', fn () => tap(Auth::loginUsingId(1), fn() => request()->session()->regenerate()) ? redirect()->route('admin.dashboard') : abort(403));
+    Route::get('/dev/as-guru',  fn () => tap(Auth::loginUsingId(2), fn() => request()->session()->regenerate()) ? redirect()->route('guru.dashboard')  : abort(403));
 }
 
-Route::fallback(fn() => response()->view('errors.404', [], 404));
+// ---------------------- DASHBOARD ----------------------
+Route::middleware('auth')->get('/dashboard', function () {
+    $u = Auth::user();
+
+    return match ($u->role ?? null) {
+        'admin'     => redirect()->route('admin.dashboard'),
+        'guru_wali' => redirect()->route('guru.dashboard'),
+        default     => redirect()->route('login'),
+    };
+})->name('dashboard');

@@ -1,68 +1,169 @@
-<!DOCTYPE html>
-<html lang="en">
+{{-- resources/views/layouts/app.blade.php --}}
+<!doctype html>
+<html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Konseling App</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-        }
-        .sidebar {
-            min-height: 100vh;
-            background: #343a40;
-            color: white;
-            padding-top: 20px;
-        }
-        .sidebar a {
-            color: white;
-            text-decoration: none;
-            display: block;
-            padding: 10px 15px;
-        }
-        .sidebar a:hover {
-            background: #495057;
-        }
-        .content {
-            margin-left: 220px;
-            padding: 20px;
-        }
-        .navbar-brand {
-            font-weight: bold;
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>@yield('title','Konseling App')</title>
+
+  {{-- Bootstrap 5 + Icons --}}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+  {{-- DataTables (opsional, gunakan jika perlu tabel interaktif) --}}
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css"/>
+
+  <style>
+    :root{ --sidebar-w: 260px; }
+    body { background:#f6f7fb; }
+    .app { min-height:100vh; display:flex; }
+    .sidebar {
+      width:var(--sidebar-w); background:#0f172a; color:#cbd5e1;
+    }
+    .sidebar .brand {
+      color:#fff; text-decoration:none; display:flex; align-items:center; gap:.6rem;
+      padding:1rem 1.25rem; border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .sidebar .nav-link { color:#cbd5e1; border-radius:.5rem; }
+    .sidebar .nav-link:hover,
+    .sidebar .nav-link.active { color:#fff; background:rgba(255,255,255,.08); }
+
+    .main { flex:1; display:flex; flex-direction:column; min-width:0; }
+    .topbar {
+      position:sticky; top:0; z-index:100;
+      background:#fff; border-bottom:1px solid #e9ecef; padding:.75rem 1rem;
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .content { padding:1.25rem; }
+
+    /* Mobile */
+    @media (max-width: 991.98px) {
+      .sidebar { position:fixed; inset:0 auto 0 0; transform:translateX(-100%); transition:.25s; z-index:1050;}
+      .sidebar.show { transform:translateX(0); }
+      .backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:1040; }
+      .backdrop.show { display:block; }
+    }
+  </style>
+
+  @stack('styles')
 </head>
 <body>
+<div class="app">
+  {{-- ===== Sidebar ===== --}}
+  <aside id="sidebar" class="sidebar">
+    <a href="{{ route('dashboard') }}" class="brand">
+      <i class="bi bi-chat-dots-fill fs-4"></i>
+      <strong>Konseling App</strong>
+    </a>
 
-    {{-- Top Navbar --}}
-    <nav class="navbar navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url('/dashboard') }}">Konseling App</a>
-            <span class="navbar-text text-white">
-                @auth
-                    {{ Auth::user()->name }} ({{ Auth::user()->role }})
-                @endauth
-            </span>
-        </div>
+    <nav class="p-3">
+      <div class="small text-uppercase text-secondary mb-2">Menu</div>
+
+      {{-- Dashboard default ke role masing2 --}}
+      <a class="nav-link d-flex align-items-center gap-2 px-3 py-2 mb-1 {{ request()->routeIs('admin.dashboard') || request()->routeIs('guru.dashboard') ? 'active' : '' }}"
+         href="{{ auth()->check() && auth()->user()->role === 'guru_wali' ? route('guru.dashboard') : route('admin.dashboard') }}">
+        <i class="bi bi-speedometer2"></i> Dashboard
+      </a>
+
+      {{-- admin only --}}
+      @auth
+        @if(auth()->user()->role === 'admin')
+          <a class="nav-link d-flex align-items-center gap-2 px-3 py-2 mb-1 {{ request()->routeIs('admin.siswa.*') ? 'active' : '' }}"
+             href="{{ route('admin.siswa.index') }}">
+            <i class="bi bi-people"></i> Data Siswa
+          </a>
+          <a class="nav-link d-flex align-items-center gap-2 px-3 py-2 mb-1 {{ request()->routeIs('admin.konseling.*') ? 'active' : '' }}"
+             href="{{ route('admin.konseling.index') }}">
+            <i class="bi bi-journal-text"></i> Data Bimbingan
+          </a>
+          <a class="nav-link d-flex align-items-center gap-2 px-3 py-2 mb-1 {{ request()->routeIs('admin.jenis.*') ? 'active' : '' }}"
+             href="{{ route('admin.jenis.index') }}">
+            <i class="bi bi-sliders"></i> Jenis Bimbingan
+          </a>
+        @endif
+
+        {{-- guru wali only --}}
+        @if(auth()->user()->role === 'guru_wali')
+          <a class="nav-link d-flex align-items-center gap-2 px-3 py-2 mb-1 {{ request()->routeIs('guru.bimbingan.*') ? 'active' : '' }}"
+             href="{{ route('guru.bimbingan.index') }}">
+            <i class="bi bi-journal-plus"></i> Bimbingan Saya
+          </a>
+        @endif
+      @endauth
     </nav>
+  </aside>
 
-    <div class="d-flex">
-        {{-- Sidebar --}}
-        <div class="sidebar">
-            <a href="{{ url('/dashboard') }}">📊 Dashboard</a>
-            <a href="{{ url('/siswa') }}">👨‍🎓 Data Siswa</a>
-            <a href="{{ url('/guru-wali') }}">👨‍🏫 Data Guru Wali</a>
-            <a href="{{ url('/bimbingan') }}">📖 Data Bimbingan</a>
-            <a href="{{ url('/jenis-bimbingan') }}">📝 Jenis Bimbingan</a>
+  {{-- ===== Main ===== --}}
+  <div class="main">
+    <header class="topbar">
+      <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-outline-secondary d-lg-none" onclick="toggleSidebar()">
+          <i class="bi bi-list"></i>
+        </button>
+        <h1 class="fs-5 m-0">@yield('page_title','Dashboard')</h1>
+      </div>
+
+      <div class="d-flex align-items-center gap-3">
+        @auth
+          <span class="text-muted small">
+            {{ auth()->user()->name }} ({{ auth()->user()->role }})
+          </span>
+          <form action="{{ route('logout') }}" method="POST" onsubmit="return confirm('Keluar dari aplikasi?')">
+            @csrf
+            <button class="btn btn-sm btn-outline-danger">
+              <i class="bi bi-box-arrow-right"></i> Keluar
+            </button>
+          </form>
+        @endauth
+      </div>
+    </header>
+
+    <main class="content">
+      {{-- Flash message --}}
+      @if(session('status'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+          {{ session('status') }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
+      @endif
 
-        {{-- Content --}}
-        <div class="content w-100">
-            @yield('content')
-        </div>
-    </div>
+      @yield('content')
+    </main>
+  </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{{-- overlay mobile --}}
+<div id="backdrop" class="backdrop" onclick="toggleSidebar()"></div>
+
+{{-- JS: Bootstrap + (opsional) DataTables + helper --}}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+{{-- DataTables (opsional) --}}
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+  const sidebar  = document.getElementById('sidebar');
+  const backdrop = document.getElementById('backdrop');
+  function toggleSidebar(){
+    sidebar.classList.toggle('show');
+    backdrop.classList.toggle('show');
+  }
+
+  /**
+   * Helper init DataTables sekali panggil:
+   * tambahkan class "datatable" di <table> untuk auto init.
+   * Contoh:
+   * <table class="table datatable"> ... </table>
+   */
+  document.addEventListener('DOMContentLoaded', () => {
+    const tables = document.querySelectorAll('table.datatable');
+    if (typeof bootstrap !== 'undefined' && tables.length) {
+      tables.forEach(t => new DataTable(t, { pageLength: 10 }));
+    }
+  });
+</script>
+
+@stack('scripts')
 </body>
 </html>

@@ -27,7 +27,7 @@
     {{-- Sidebar --}}
     <div class="sidebar">
         <h3>Konseling App</h3>
-        <a href="{{ route('dashboard') }}">Dashboard</a>
+        <a href="{{ route('admin.dashboard') }}">Dashboard</a>
         <a href="{{ route('siswa.index') }}">Data Siswa</a>
         <a href="#">Data Guru Wali</a>
         <a href="#">Jenis Bimbingan</a>
