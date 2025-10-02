@@ -9,7 +9,11 @@ class JenisBimbingan extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['nama_jenis','tipe','poin']; // tipe: positif|negatif
-    public function bimbingans() { return $this->hasMany(Bimbingan::class, 'jenis_id'); }
-}
+    // Default sudah benar: jenis_bimbingans
+    protected $fillable = ['kode','nama_jenis','poin'];
 
+    public function bimbingans()
+    {
+        return $this->hasMany(Bimbingan::class, 'jenis_id');
+    }
+}
