@@ -76,3 +76,7 @@ Route::middleware('auth')->get('/dashboard', function () {
         default     => redirect()->route('login'),
     };
 })->name('dashboard');
+
+Route::fallback(function () {
+    abort(404);
+});
