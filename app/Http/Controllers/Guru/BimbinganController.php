@@ -9,45 +9,34 @@ use Illuminate\Support\Facades\Auth;
 
 class BimbinganController extends Controller
 {
+    public function __construct() { $this->authorizeResource(Bimbingan::class, 'bimbingan'); }
+
     public function index() {
-        $gwId = Auth::user()->guruWali?->id;
-        $data = Bimbingan::with(['siswa','jenis'])
-            ->where('guru_id',$gwId)
+        $user = auth()->user();
+        $guru = GuruWali::where('user_id',$user->id)->firstOrFail();
+        $data = Bimbingan::with(['siswa.kelas','jenis'])
+            ->where('guru_id',$guru->id)
             ->latest('tanggal')->paginate(20);
         return view('guru.bimbingan.index', compact('data'));
     }
 
     public function create() {
         $jenis = JenisBimbingan::orderBy('nama_jenis')->get();
-        return view('guru.bimbingan.form', compact('jenis'));
+        // siswa dari kelas yang dibimbing? (opsional filter)
+        $siswa = Siswa::with('kelas')->orderBy('nama_siswa')->get();
+        return view('guru.bimbingan.create', compact('jenis','siswa'));
     }
 
-    public function store(KonselingStoreRequest $r) {
-        $gwId  = Auth::user()->guruWali?->id;
-        $jenis = JenisBimbingan::findOrFail($r->jenis_id);
+    public function store(BimbinganRequest $r) {
+        $guru = GuruWali::where('user_id', auth()->id())->firstOrFail();
+        $j    = JenisBimbingan::findOrFail($r->jenis_id);
 
         Bimbingan::create([
-            'guru_id'  => $gwId,
-            'siswa_id' => $r->siswa_id,
-            'jenis_id' => $r->jenis_id,
-            'tanggal'  => $r->tanggal,
-            'jam'      => $r->jam ?? now()->format('H:i:s'),
-            'catatan'  => $r->catatan,
-            'poin'     => $jenis->poin, // simpan poin default
+            ...$r->validated(),
+            'guru_id' => $guru->id,
+            'poin'    => $j->poin, // cache poin
         ]);
 
-        return to_route('guru.bimbingan.index')->with('ok','Tersimpan');
-    }
-
-    // autocomplete siswa milik kelas yang diampu guru wali
-    public function siswaSearch() {
-        $kelasIds = Auth::user()->guruWali?->kelas()->pluck('id') ?? [];
-        $q = request('q','');
-
-        $siswa = Siswa::whereIn('kelas_id', $kelasIds)
-            ->when($q, fn($qq)=>$qq->where('nama_siswa','like',"%$q%"))
-            ->limit(20)->get(['id','nama_siswa']);
-
-        return $siswa->map(fn($s)=>['id'=>$s->id,'text'=>$s->nama_siswa]);
+        return redirect()->route('guru.bimbingan.index')->with('ok','Bimbingan tersimpan');
     }
 }
