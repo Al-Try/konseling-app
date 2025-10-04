@@ -10,7 +10,7 @@ class GuruWali extends Model
     use HasFactory;
 
     // TABEL: guru_wali (bukan guru_walis)
-    protected $table = 'guru_wali';
+    protected $table = 'guru_walis';
 
     // KITA STANDARKAN: nama kolom identitas adalah 'nama_guru'
     protected $fillable = ['user_id','nip','nama_guru','no_hp','alamat'];

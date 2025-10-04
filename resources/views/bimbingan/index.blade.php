@@ -26,7 +26,7 @@
                 <tr>
                     <td>{{ $index + 1 }}</td>
                     <td>{{ $item->siswa->nama ?? '-' }}</td>
-                    <td>{{ $item->guruWali->nama ?? '-' }}</td>
+                    <td>{{ $item->guruWali->nama_guru ?? '-' }}</td>
                     <td>{{ $item->jenisBimbingan->nama ?? '-' }}</td>
                     <td>{{ $item->deskripsi }}</td>
                     <td>{{ $item->tanggal }}</td>

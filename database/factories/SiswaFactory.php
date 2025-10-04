@@ -12,9 +12,9 @@ class SiswaFactory extends Factory
         return [
             'nis'           => $this->faker->unique()->numerify('20########'),
             'nama_siswa'    => $this->faker->name(),
-            'kelas_id'      => Kelas::inRandomOrder()->value('id') ?? Kelas::factory(),
+            'kelas_id'      => Kelas::inRandomOrder()->value('id'),
             'jk'            => $this->faker->randomElement(['L','P']),
-            'tanggal_lahir' => $this->faker->date(),
+            'tanggal_lahir' => $this->faker->date('Y-m-d', '-15 years'),
         ];
     }
 }

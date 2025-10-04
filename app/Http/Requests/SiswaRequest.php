@@ -12,4 +12,4 @@ class SiswaRequest extends FormRequest {
             'tanggal_lahir' => ['nullable','date'],
         ];
     }
-}
+}   

@@ -18,10 +18,7 @@
         <label class="block mb-2">Tanggal</label>
         <input type="date" name="tanggal" class="input w-full" required value="{{ date('Y-m-d') }}">
       </div>
-      <div>
-        <label class="block mb-2">Jam</label>
-        <input type="time" name="jam" class="input w-full" value="{{ date('H:i') }}">
-      </div>
+      
     </div>
 
     <label class="block mt-4 mb-2">Catatan</label>

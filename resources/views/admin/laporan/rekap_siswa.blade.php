@@ -13,7 +13,7 @@
       <td>{{ $r->tanggal->format('d-m-Y') }}</td>
       <td>{{ $r->jenis?->nama_jenis }}</td>
       <td>{{ $r->jenis?->poin }}</td>
-      <td>{{ $r->guruWali?->user?->name }}</td>
+      <td>{{ $r->guruWali?->user?->nama_guru }}</td>
       <td>{{ $r->catatan }}</td>
     </tr>
   @empty

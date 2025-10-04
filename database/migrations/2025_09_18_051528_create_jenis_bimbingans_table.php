@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('jenis_bimbingans', function (Blueprint $table) {
-            $table->id();
-            $table->string('nama'); // contoh: Pribadi, Sosial, Belajar, Karir
-            $table->text('deskripsi')->nullable();
-            $table->timestamps();
-        });
+       Schema::create('jenis_bimbingans', function (Blueprint $table) {
+    $table->id();
+    $table->string('kode')->unique();      // contoh: prestasi / pelanggaran
+    $table->string('nama_jenis');
+    $table->integer('poin')->default(0);   // +/-
+    $table->timestamps();
+});
+
     }
 
     /**

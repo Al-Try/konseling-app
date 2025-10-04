@@ -35,20 +35,21 @@ Route::middleware(['auth','role:admin'])
     ->prefix('admin')->name('admin.')
     ->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-
         Route::resource('siswa', SiswaController::class);
-
         Route::resource('konseling', KonselingController::class)
             ->only(['index']); // tambah create/store/show kalau siap
-
         Route::resource('jenis', JenisBimbinganController::class)
             ->parameters(['jenis' => 'jenis'])
             ->names('jenis')
             ->only(['index']); // nanti tambah store/update/destroy
     });
+    Route::resource('jenis', \App\Http\Controllers\Admin\JenisBimbinganController::class)
+    ->except(['create','edit','show']); // backend only
+    
+    Route::resource('konseling', \App\Http\Controllers\Admin\KonselingController::class)
+        ->only(['index','show']);
 
 
-// ---------------------- GURU WALI ----------------------
 // ---------------------- GURU WALI ----------------------
 Route::middleware(['auth','role:guru_wali'])
     ->prefix('guru')->name('guru.')
@@ -58,6 +59,14 @@ Route::middleware(['auth','role:guru_wali'])
         // kalau sudah bikin controller
         // Route::resource('bimbingan', BimbinganController::class)->only(['index','create','store','show']);
     });
+
+    // JSON autocomplete siswa (hanya siswa di kelas/guru terkait kalau kamu batasi)
+Route::get('/siswa/search', [\App\Http\Controllers\Guru\BimbinganController::class, 'siswaSearch'])
+    ->name('siswa.search');
+
+Route::resource('bimbingan', \App\Http\Controllers\Guru\BimbinganController::class)
+    ->only(['index','create','store','show']); // untuk backend, create bisa return JSON metadata
+
 
 
 // ---------------------- DEV-ONLY (opsional) ----------------------

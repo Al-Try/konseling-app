@@ -13,8 +13,14 @@ return new class extends Migration
     {
         Schema::create('siswas', function (Blueprint $table) {
             $table->id();
+            $table->string('nis')->unique();
+            $table->string('nama_siswa');
+            $table->enum('jk', ['L','P'])->nullable();
+            $table->date('tanggal_lahir')->nullable();
+            $table->foreignId('kelas_id')->nullable()->constrained('kelas')->nullOnDelete();
             $table->timestamps();
         });
+
     }
 
     /**

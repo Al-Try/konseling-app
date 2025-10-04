@@ -14,59 +14,54 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Kelas
-        Kelas::query()->truncate();
-        Kelas::factory()->count(2)->sequence(
-            ['nama_kelas'=>'X IPA 1','tingkat'=>'X'],
-            ['nama_kelas'=>'X IPS 1','tingkat'=>'X'],
-        )->create();
+        // 1) Kelas
+        \App\Models\Kelas::query()->insert([
+            ['nama_kelas' => 'X IPA 1', 'tingkat' => 'X', 'created_at'=>now(),'updated_at'=>now()],
+            ['nama_kelas' => 'X IPS 1', 'tingkat' => 'X', 'created_at'=>now(),'updated_at'=>now()],
+        ]);
 
-        // Users
-        User::query()->truncate();
-        $admin = User::factory()->create([
-            'name'     => 'Admin',
-            'email'    => 'admin@sekolah.com',
-            'role'     => 'admin',
+        // 2) Users (admin & guru wali)
+        $admin = \App\Models\User::create([
+            'name' => 'Admin Sekolah',
+            'email'=> 'admin@sekolah.com',
             'password' => bcrypt('123456'),
+            'role' => 'admin',
         ]);
-        $uGuru = User::factory()->create([
-            'name'     => 'Guru Wali A',
-            'email'    => 'guru@sekolah.com',
-            'role'     => 'guru_wali',
+
+        $guruUser = \App\Models\User::create([
+            'name' => 'Guru Wali A',
+            'email'=> 'guru@sekolah.com',
             'password' => bcrypt('123456'),
+            'role' => 'guru_wali',
         ]);
 
-        // Guru Wali
-        GuruWali::query()->truncate();
-        $guru  = GuruWali::create([
-            'user_id' => $uGuru->id,
-            'nip'     => '1980xxxx',
-            'nama'    => 'Guru Wali A',
+        $guru = \App\Models\GuruWali::create([
+            'user_id'   => $guruUser->id,
+            'nip'       => '19801231xxxx',
+            'nama_guru' => 'Guru Wali A',
+            'no_hp'     => '081234567890',
         ]);
 
-        // Siswa
-        Siswa::query()->truncate();
-        Siswa::factory()->count(40)->create();
+        // 3) Siswa (random)
+        \App\Models\Siswa::factory()->count(20)->create();
 
-        // Jenis bimbingan
-        JenisBimbingan::query()->truncate();
-        $prestasi = JenisBimbingan::create(['kode'=>'prestasi',   'nama_jenis'=>'Prestasi',   'poin'=>+5]);
-        $pelang   = JenisBimbingan::create(['kode'=>'pelanggaran','nama_jenis'=>'Pelanggaran','poin'=>-2]);
+        // 4) Jenis bimbingan (kategori + poin)
+        $prestasi = \App\Models\JenisBimbingan::create(['nama_jenis' => 'Prestasi',    'tipe'=>'positif','poin'=> 5]);
+        $pelang   = \App\Models\JenisBimbingan::create(['nama_jenis' => 'Pelanggaran', 'tipe'=>'negatif','poin'=>-2]);
 
-        // Bimbingan (20 contoh acak, untuk isi grafik)
-        Bimbingan::query()->truncate();
-        Siswa::inRandomOrder()->take(20)->get()->each(function ($s) use ($guru,$prestasi,$pelang) {
-            $isPrestasi = (bool) random_int(0,1);
-            $jenis = $isPrestasi ? $prestasi : $pelang;
-
-            Bimbingan::create([
-                'tanggal'  => now()->subDays(random_int(0, 330)), // sebar setahun biar tren kelihatan
-                'siswa_id' => $s->id,
-                'guru_id'  => $guru->id,
-                'jenis_id' => $jenis->id,
-                'catatan'  => fake()->sentence(8),
-                'poin'     => $jenis->poin, // cache poin
+        // 5) Generate bimbingan contoh (acak 15–30)
+        $jenis = [$prestasi->id, $pelang->id];
+        $siswas = \App\Models\Siswa::inRandomOrder()->take(15)->get();
+        foreach ($siswas as $s) {
+            \App\Models\Bimbingan::create([
+                'tanggal' => now()->subDays(rand(0,60))->format('Y-m-d'),
+                'siswa_id'=> $s->id,
+                'guru_id' => $guru->id,
+                'jenis_id'=> $this->command->getOutput()->isVerbose() ? $jenis[array_rand($jenis)] : $jenis[array_rand($jenis)],
+                'catatan' => fake()->sentence(8),
+                'poin'    => rand(0,1) ? 5 : -2,
             ]);
-        });
+        }
     }
+
 }

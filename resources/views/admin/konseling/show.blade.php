@@ -6,7 +6,7 @@
   <ul>
     <li>Tanggal: {{ $konseling->created_at?->format('d-m-Y H:i') }}</li>
     <li>Siswa: {{ $konseling->siswa->nama ?? '-' }}</li>
-    <li>Guru Wali: {{ $konseling->guruWali->user->name ?? '-' }}</li>
+    <li>Guru Wali: {{ $konseling->guruWali->user->nama_guru ?? '-' }}</li>
     <li>Jenis: {{ $konseling->jenis->nama ?? '-' }}</li>
     <li>Poin/Catatan: {{ $konseling->poin ?? '-' }} — {{ $konseling->catatan ?? '-' }}</li>
   </ul>

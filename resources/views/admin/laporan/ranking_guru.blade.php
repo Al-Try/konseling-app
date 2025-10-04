@@ -8,7 +8,7 @@
   @foreach($rows as $i=>$r)
     <tr>
       <td>{{ $i+1 }}</td>
-      <td>{{ $r->guruWali?->user?->name }}</td>
+      <td>{{ $r->guruWali?->user?->nama_guru }}</td>
       <td>{{ $r->jml }}</td>
     </tr>
   @endforeach

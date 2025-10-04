@@ -24,7 +24,6 @@ class KonselingStoreRequest extends FormRequest
             'siswa_id' => ['required','exists:siswas,id'],
             'jenis_id' => ['required','exists:jenis_bimbingans,id'],
             'tanggal'  => ['required','date'],
-            'jam'      => ['nullable','date_format:H:i'],
             'catatan'  => ['nullable','string','max:1000'],
         ];
     }

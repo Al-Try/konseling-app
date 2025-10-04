@@ -10,7 +10,7 @@ class Siswa extends Model
     use HasFactory;
 
     // TABEL: siswa (bukan siswas)
-    protected $table = 'siswa';
+    protected $table = 'siswas';
 
     protected $fillable = [
         'nis','nama_siswa','kelas_id','jk','alamat','no_hp','orang_tua'

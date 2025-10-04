@@ -13,13 +13,13 @@ return new class extends Migration
     {
         
         Schema::create('guru_walis', function (Blueprint $table) {
-        $table->id();
-        $table->string('nama');
-        $table->string('nip')->unique()->nullable();
-        $table->string('email')->unique();
-        $table->string('password');
-        $table->timestamps();
+    $table->id();
+    $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+    $table->string('nip')->nullable();
+    $table->string('nama')->nullable();
+    $table->timestamps();
 });
+
     }
 
     /**
