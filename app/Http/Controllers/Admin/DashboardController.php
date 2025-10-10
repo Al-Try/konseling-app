@@ -8,14 +8,14 @@ use App\Models\GuruWali;
 use App\Models\JenisBimbingan;
 use App\Models\Kelas;
 use App\Models\Siswa;
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        // ======= KPI =======
+        // ===== KPI =====
         $stats = [
             'totalSiswa'     => Siswa::count(),
             'totalGuruWali'  => GuruWali::count(),
@@ -23,32 +23,35 @@ class DashboardController extends Controller
             'totalKonseling' => Bimbingan::count(),
         ];
 
-        // ======= Ranking (top 5) =======
-        // Top guru (ambil nama dari user)
-        $topGuru = Bimbingan::select('guru_id', DB::raw('COUNT(*) as jml'))
-            ->with(['guruWali.user:id,name'])
-            ->groupBy('guru_id')
-            ->orderByDesc('jml')
-            ->limit(5)
-            ->get()
-            ->map(fn($row) => [
-                'label' => $row->guruWali?->user?->name ?? 'Tidak diketahui',
-                'jml'   => (int) $row->jml,
-            ]);
+        // ===== Siswa terbaru (5 entri) =====
+        $siswaTerbaru = Siswa::with('kelas:id,nama_kelas')
+            ->latest('id')
+            ->take(5)
+            ->get(['id','nama_siswa','kelas_id']);
 
-        // Top siswa
-        $topSiswa = Bimbingan::select('siswa_id', DB::raw('COUNT(*) as jml'))
-            ->with(['siswa:id,nama_siswa'])
-            ->groupBy('siswa_id')
-            ->orderByDesc('jml')
-            ->limit(5)
-            ->get()
-            ->map(fn($row) => [
-                'label' => $row->siswa?->nama_siswa ?? 'Tidak diketahui',
-                'jml'   => (int) $row->jml,
-            ]);
+        // ===== Tren bulanan 12 bulan terakhir =====
+        $start = Carbon::now()->startOfMonth()->subMonths(11);
+        $end   = Carbon::now()->endOfMonth();
 
-        // ======= Distribusi kategori =======
+        // Ambil hitung per YYYY-MM dari DB
+        $raw = Bimbingan::selectRaw("DATE_FORMAT(tanggal, '%Y-%m') as ym, COUNT(*) as jml")
+            ->whereBetween('tanggal', [$start->toDateString(), $end->toDateString()])
+            ->groupBy('ym')
+            ->orderBy('ym')
+            ->pluck('jml','ym'); // -> ['2025-01' => 3, ...]
+
+        // Build label 12 bulan berurutan + isi nol jika kosong
+        $cursor = $start->copy();
+        $bulananLabels = [];
+        $bulananValues = [];
+        for ($i = 0; $i < 12; $i++) {
+            $key = $cursor->format('Y-m');
+            $bulananLabels[] = $cursor->isoFormat('MMM YY'); // ex: Jan 25
+            $bulananValues[] = (int) ($raw[$key] ?? 0);
+            $cursor->addMonth();
+        }
+
+        // ===== Distribusi kategori (bar/ pie) =====
         $kategoriDistribusi = Bimbingan::select('jenis_id', DB::raw('COUNT(*) as jml'))
             ->groupBy('jenis_id')
             ->with(['jenis:id,nama_jenis'])
@@ -58,36 +61,38 @@ class DashboardController extends Controller
                 'jml'   => (int) $r->jml,
             ]);
 
-        // ======= Tren bulanan 12 bulan terakhir =======
-        // Ambil raw dari DB
-        $rawBulanan = Bimbingan::selectRaw("DATE_FORMAT(tanggal, '%Y-%m') as ym, COUNT(*) as jml")
-            ->where('tanggal', '>=', now()->subMonths(11)->startOfMonth())
-            ->groupBy('ym')
-            ->orderBy('ym')
-            ->pluck('jml', 'ym'); // key=YM, val=count
+        // ===== Top 5 guru wali paling aktif =====
+        $topGuru = Bimbingan::select('guru_id', DB::raw('COUNT(*) as jml'))
+            ->groupBy('guru_id')
+            ->orderByDesc('jml')
+            ->with(['guruWali.user:id,name'])
+            ->limit(5)
+            ->get()
+            ->map(fn($r) => [
+                'label' => $r->guruWali?->user?->name ?? '—',
+                'jml'   => (int) $r->jml,
+            ]);
 
-        // Susun 12 bulan terakhir (agar bulan kosong jadi 0)
-        $labels = [];
-        $values = [];
-        $cursor = now()->subMonths(11)->startOfMonth();
-        for ($i = 0; $i < 12; $i++) {
-            $ym = $cursor->format('Y-m');
-            $labels[] = $cursor->isoFormat('MMM YYYY'); // contoh: Okt 2025
-            $values[] = (int) ($rawBulanan[$ym] ?? 0);
-            $cursor->addMonth();
-        }
+        // ===== Top 5 siswa paling sering dikonseling =====
+        $topSiswa = Bimbingan::select('siswa_id', DB::raw('COUNT(*) as jml'))
+            ->groupBy('siswa_id')
+            ->orderByDesc('jml')
+            ->with(['siswa:id,nama_siswa'])
+            ->limit(5)
+            ->get()
+            ->map(fn($r) => [
+                'label' => $r->siswa?->nama_siswa ?? '—',
+                'jml'   => (int) $r->jml,
+            ]);
 
-        // ======= Tabel kecil: siswa terbaru (opsional) =======
-        $siswaTerbaru = Siswa::with('kelas')->latest()->limit(6)->get();
-
-        return view('admin.dashboard', [
-            'stats'               => $stats,
-            'topGuru'             => $topGuru,
-            'topSiswa'            => $topSiswa,
-            'kategoriDistribusi'  => $kategoriDistribusi,
-            'bulananLabels'       => $labels,
-            'bulananValues'       => $values,
-            'siswaTerbaru'        => $siswaTerbaru,
-        ]);
+        return view('admin.dashboard', compact(
+            'stats',
+            'siswaTerbaru',
+            'bulananLabels',
+            'bulananValues',
+            'kategoriDistribusi',
+            'topGuru',
+            'topSiswa'
+        ));
     }
 }

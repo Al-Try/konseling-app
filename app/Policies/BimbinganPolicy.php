@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Policies;
 
 use App\Models\Bimbingan;
@@ -7,19 +6,13 @@ use App\Models\User;
 
 class BimbinganPolicy
 {
-    public function before(User $user, string $ability): ?bool
-    {
-        if ($user->isAdmin()) return true; // admin bebas
-        return null;
+    public function view(User $user, Bimbingan $b): bool {
+        return $user->isAdmin() || $b->guru_id === $user->guruWali?->id;
     }
-
-    public function view(User $user, Bimbingan $bimbingan): bool
-    {
-        return $user->isGuruWali() && $bimbingan->guru_id === $user->guruWali?->id;
+    public function update(User $user, Bimbingan $b): bool {
+        return $b->guru_id === $user->guruWali?->id;
     }
-
-    public function create(User $user): bool
-    {
-        return $user->isGuruWali();
+    public function delete(User $user, Bimbingan $b): bool {
+        return $b->guru_id === $user->guruWali?->id;
     }
 }

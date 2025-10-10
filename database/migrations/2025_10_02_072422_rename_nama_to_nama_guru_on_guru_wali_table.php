@@ -9,9 +9,9 @@ return new class extends Migration {
     {
         if (Schema::hasTable('guru_wali')
             && Schema::hasColumn('guru_wali','nama')
-            && !Schema::hasColumn('guru_wali','nama_guru')) {
+            && !Schema::hasColumn('guru_wali','nama')) {
             Schema::table('guru_wali', function (Blueprint $table) {
-                $table->renameColumn('nama', 'nama_guru');
+                $table->renameColumn('nama', 'nama');
             });
         }
     }
@@ -19,10 +19,10 @@ return new class extends Migration {
     public function down(): void
     {
         if (Schema::hasTable('guru_wali')
-            && Schema::hasColumn('guru_wali','nama_guru')
+            && Schema::hasColumn('guru_wali','nama')
             && !Schema::hasColumn('guru_wali','nama')) {
             Schema::table('guru_wali', function (Blueprint $table) {
-                $table->renameColumn('nama_guru', 'nama');
+                $table->renameColumn('nama', 'nama');
             });
         }
     }

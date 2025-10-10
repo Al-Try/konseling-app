@@ -17,7 +17,7 @@
             <td>{{ $row->id }}</td>
             <td>{{ $row->created_at?->format('d-m-Y') }}</td>
             <td>{{ $row->siswa->nama ?? '-' }}</td>
-            <td>{{ $row->guruWali->user->nama_guru ?? '-' }}</td>
+            <td>{{ $row->guruWali->user->nama ?? '-' }}</td>
             <td>{{ $row->jenis->nama ?? '-' }}</td>
             <td><a href="{{ route('admin.konseling.show',$row) }}" class="btn btn-sm btn-primary">Detail</a></td>
           </tr>

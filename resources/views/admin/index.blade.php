@@ -47,7 +47,7 @@
         <ul class="list-group list-group-flush">
             @foreach($rankingGuru as $guru)
                 <li class="list-group-item">
-                    {{ $guru->nama_guru }} - {{ $guru->bimbingan_count }} bimbingan
+                    {{ $guru->nama }} - {{ $guru->bimbingan_count }} bimbingan
                 </li>
             @endforeach
         </ul>

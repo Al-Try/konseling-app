@@ -3,27 +3,42 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\{Siswa,Bimbingan};
+use App\Models\Bimbingan;
+use App\Models\Siswa;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 
 class LaporanController extends Controller
 {
-    public function rekapSiswa($siswaId) {
-        $siswa = Siswa::with('kelas')->findOrFail($siswaId);
+    public function rekapSiswa(Siswa $siswa)
+    {
         $riwayat = Bimbingan::with(['jenis','guruWali.user'])
-            ->where('siswa_id',$siswaId)->orderByDesc('tanggal')->get();
+            ->where('siswa_id', $siswa->id)
+            ->orderByDesc('tanggal')
+            ->get();
 
-        return Pdf::loadView('laporan.rekap_siswa', compact('siswa','riwayat'))
-                  ->stream("laporan_siswa_{$siswa->id}.pdf");
+        $pdf = Pdf::loadView('admin.laporan.rekap_siswa', [
+            'siswa' => $siswa,
+            'riwayat' => $riwayat,
+            'total_poin' => $riwayat->sum('poin'),
+        ])->setPaper('a4');
+
+        return $pdf->download("Rekap-{$siswa->nama_siswa}.pdf");
     }
 
-    public function rankingGuru() {
-        $rows = Bimbingan::select('guru_id', DB::raw('COUNT(*) as jml'))
-            ->with('guruWali.user:id,name')->groupBy('guru_id')
-            ->orderByDesc('jml')->get();
+    public function rankingGuru()
+    {
+        $ranking = Bimbingan::select('guru_id', DB::raw('COUNT(*) as jumlah'))
+            ->groupBy('guru_id')
+            ->with('guruWali.user')
+            ->orderByDesc('jumlah')
+            ->limit(20)
+            ->get();
 
-        return Pdf::loadView('laporan.ranking_guru', compact('rows'))
-                  ->stream("ranking_guru.pdf");
+        $pdf = Pdf::loadView('admin.laporan.ranking_guru', [
+            'ranking' => $ranking,
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->download("Ranking-Guru-Wali.pdf");
     }
 }

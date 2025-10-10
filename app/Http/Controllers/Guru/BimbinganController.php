@@ -3,40 +3,61 @@
 namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\KonselingStoreRequest;
-use App\Models\{Bimbingan,JenisBimbingan,Siswa};
-use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\Guru\StoreBimbinganRequest;
+use App\Models\Bimbingan;
+use App\Models\GuruWali;
+use App\Models\JenisBimbingan;
+use App\Models\Siswa;
+use Illuminate\Http\Request;
 
 class BimbinganController extends Controller
 {
-    public function __construct() { $this->authorizeResource(Bimbingan::class, 'bimbingan'); }
+    public function index()
+    {
+        $guru = auth()->user()->guruWali; // relasi user->guruWali
+        $list = Bimbingan::with(['siswa','jenis'])
+            ->where('guru_id', $guru->id ?? 0)
+            ->latest('tanggal')
+            ->paginate(12);
 
-    public function index() {
-        $user = auth()->user();
-        $guru = GuruWali::where('user_id',$user->id)->firstOrFail();
-        $data = Bimbingan::with(['siswa.kelas','jenis'])
-            ->where('guru_id',$guru->id)
-            ->latest('tanggal')->paginate(20);
-        return view('guru.bimbingan.index', compact('data'));
+        return view('guru.bimbingan.index', compact('list'));
     }
 
-    public function create() {
+    public function create()
+    {
         $jenis = JenisBimbingan::orderBy('nama_jenis')->get();
-        // siswa dari kelas yang dibimbing? (opsional filter)
-        $siswa = Siswa::with('kelas')->orderBy('nama_siswa')->get();
-        return view('guru.bimbingan.create', compact('jenis','siswa'));
+        return view('guru.bimbingan.create', compact('jenis'));
     }
 
-    public function store(BimbinganRequest $r) {
-        $guru = GuruWali::where('user_id', auth()->id())->firstOrFail();
-        $j    = JenisBimbingan::findOrFail($r->jenis_id);
-
+    public function store(StoreBimbinganRequest $request)
+    {
+        $guru = auth()->user()->guruWali;
         Bimbingan::create([
-            ...$r->validated(),
-            'guru_id' => $guru->id,
-            'poin'    => $j->poin, // cache poin
+            'tanggal'  => $request->tanggal,
+            'siswa_id' => $request->siswa_id,
+            'guru_id'  => $guru->id,
+            'jenis_id' => $request->jenis_id,
+            'catatan'  => $request->catatan,
+            'poin'     => optional(JenisBimbingan::find($request->jenis_id))->poin ?? 0,
         ]);
 
-        return redirect()->route('guru.bimbingan.index')->with('ok','Bimbingan tersimpan');
+        return redirect()->route('guru.bimbingan.index')->with('ok','Bimbingan tersimpan.');
+    }
+
+    // Autocomplete siswa (by nama)
+    public function siswaSearch(Request $request)
+    {
+        $q = (string)$request->get('q', '');
+        $items = Siswa::query()
+            ->with('kelas:id,nama_kelas')
+            ->when($q, fn($r) => $r->where('nama_siswa','like',"%$q%"))
+            ->limit(10)->get(['id','nama_siswa','kelas_id']);
+
+        return response()->json(
+            $items->map(fn($s) => [
+                'id'   => $s->id,
+                'text' => $s->nama_siswa.' — '.$s->kelas?->nama_kelas,
+            ])
+        );
     }
 }

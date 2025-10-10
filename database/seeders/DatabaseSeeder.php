@@ -2,66 +2,89 @@
 
 namespace Database\Seeders;
 
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+
 use App\Models\User;
 use App\Models\Kelas;
 use App\Models\Siswa;
 use App\Models\GuruWali;
-use App\Models\Bimbingan;
 use App\Models\JenisBimbingan;
-use Illuminate\Database\Seeder;
+use App\Models\Bimbingan;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1) Kelas
-        \App\Models\Kelas::query()->insert([
-            ['nama_kelas' => 'X IPA 1', 'tingkat' => 'X', 'created_at'=>now(),'updated_at'=>now()],
-            ['nama_kelas' => 'X IPS 1', 'tingkat' => 'X', 'created_at'=>now(),'updated_at'=>now()],
-        ]);
+        // ---------- 1) KELAS ----------
+        Kelas::query()->updateOrCreate(
+            ['nama_kelas' => 'X IPA 1'],
+            ['tingkat' => 'X']
+        );
+        Kelas::query()->updateOrCreate(
+            ['nama_kelas' => 'X IPS 1'],
+            ['tingkat' => 'X']
+        );
 
-        // 2) Users (admin & guru wali)
-        $admin = \App\Models\User::create([
-            'name' => 'Admin Sekolah',
-            'email'=> 'admin@sekolah.com',
-            'password' => bcrypt('123456'),
-            'role' => 'admin',
-        ]);
+        $kelasIds = Kelas::pluck('id')->toArray();
 
-        $guruUser = \App\Models\User::create([
-            'name' => 'Guru Wali A',
-            'email'=> 'guru@sekolah.com',
-            'password' => bcrypt('123456'),
-            'role' => 'guru_wali',
-        ]);
+        // ---------- 2) USERS ----------
+        $admin = User::updateOrCreate(
+            ['email' => 'admin@sekolah.com'],
+            ['name' => 'Admin Sekolah', 'password' => bcrypt('123456'), 'role' => 'admin']
+        );
 
-        $guru = \App\Models\GuruWali::create([
-            'user_id'   => $guruUser->id,
-            'nip'       => '19801231xxxx',
-            'nama_guru' => 'Guru Wali A',
-            'no_hp'     => '081234567890',
-        ]);
+        $guruUser = User::updateOrCreate(
+            ['email' => 'guru@sekolah.com'],
+            ['name' => 'Guru Wali A', 'password' => bcrypt('123456'), 'role' => 'guru_wali']
+        );
 
-        // 3) Siswa (random)
-        \App\Models\Siswa::factory()->count(20)->create();
+        // ---------- 3) GURU WALI ----------
+        $guru = GuruWali::updateOrCreate(
+            ['user_id' => $guruUser->id],
+            ['nip' => '19801231xxxx', 'nama' => 'Guru Wali A']
+        );
 
-        // 4) Jenis bimbingan (kategori + poin)
-        $prestasi = \App\Models\JenisBimbingan::create(['nama_jenis' => 'Prestasi',    'tipe'=>'positif','poin'=> 5]);
-        $pelang   = \App\Models\JenisBimbingan::create(['nama_jenis' => 'Pelanggaran', 'tipe'=>'negatif','poin'=>-2]);
+        // ---------- 4) SISWA (20 data acak) ----------
+        if (Siswa::count() < 20) {
+            // Pastikan ada kelas untuk relasi
+            for ($i = 0; $i < 20; $i++) {
+                Siswa::create([
+                    'nis'          => (string) fake()->unique()->numerify('20########'),
+                    'nama_siswa'   => fake()->name(),
+                    'kelas_id'     => $kelasIds[array_rand($kelasIds)],
+                    'jk'           => fake()->randomElement(['L','P']),
+                    'tanggal_lahir'=> fake()->date(),
+                ]);
+            }
+        }
 
-        // 5) Generate bimbingan contoh (acak 15–30)
-        $jenis = [$prestasi->id, $pelang->id];
-        $siswas = \App\Models\Siswa::inRandomOrder()->take(15)->get();
-        foreach ($siswas as $s) {
-            \App\Models\Bimbingan::create([
-                'tanggal' => now()->subDays(rand(0,60))->format('Y-m-d'),
-                'siswa_id'=> $s->id,
-                'guru_id' => $guru->id,
-                'jenis_id'=> $this->command->getOutput()->isVerbose() ? $jenis[array_rand($jenis)] : $jenis[array_rand($jenis)],
-                'catatan' => fake()->sentence(8),
-                'poin'    => rand(0,1) ? 5 : -2,
-            ]);
+        // ---------- 5) JENIS BIMBINGAN ----------
+        $prestasi = JenisBimbingan::firstOrCreate(
+            ['kode' => 'prestasi'],                      // <-- pakai kode sebagai key unik
+            ['nama_jenis' => 'Prestasi', 'tipe' => 'positif', 'poin' => 5]
+        );
+
+        $pelanggaran = JenisBimbingan::firstOrCreate(
+            ['kode' => 'pelanggaran'],
+            ['nama_jenis' => 'Pelanggaran', 'tipe' => 'negatif', 'poin' => -2]
+        );
+
+        // ---------- 6) BIMBINGAN CONTOH (acak) ----------
+        if (Bimbingan::count() === 0) {
+            $jenisMap = [$prestasi->id => $prestasi->poin, $pelanggaran->id => $pelanggaran->poin];
+            Siswa::inRandomOrder()->take(15)->get()->each(function ($siswa) use ($guru, $jenisMap) {
+                $jenisId = array_rand($jenisMap);
+                Bimbingan::create([
+                    'tanggal'  => now()->subDays(rand(0, 60))->toDateString(),
+                    'siswa_id' => $siswa->id,
+                    'guru_id'  => $guru->id,
+                    'jenis_id' => $jenisId,
+                    'catatan'  => fake()->sentence(8),
+                    'poin'     => $jenisMap[$jenisId],
+                ]);
+            });
         }
     }
-
 }

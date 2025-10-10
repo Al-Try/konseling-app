@@ -1,29 +1,47 @@
 @extends('layouts.app')
+@section('page_title','Jenis Bimbingan')
+
 @section('content')
-<div class="max-w-4xl mx-auto p-6">
-  <div class="flex justify-between mb-4">
-    <h1 class="text-xl font-bold">Jenis Bimbingan</h1>
-    <a href="{{ route('admin.jenis.create') }}" class="btn">Tambah</a>
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">Jenis Bimbingan</h5>
+    <a href="{{ route('admin.jenis.create') }}" class="btn btn-primary">
+      <i class="bi bi-plus-lg"></i> Tambah
+    </a>
   </div>
-  <table class="w-full bg-white shadow rounded">
-    <thead><tr><th>Nama</th><th>Tipe</th><th>Poin</th><th></th></tr></thead>
-    <tbody>
-      @foreach($data as $r)
-      <tr class="border-t">
-        <td>{{ $r->nama_jenis }}</td>
-        <td>{{ $r->tipe ?? '-' }}</td>
-        <td>{{ $r->poin }}</td>
-        <td class="text-right">
-          <a href="{{ route('admin.jenis.edit',$r) }}" class="text-blue-600">Edit</a>
-          <form action="{{ route('admin.jenis.destroy',$r) }}" method="POST" class="inline">
-            @csrf @method('DELETE')
-            <button class="text-red-600" onclick="return confirm('Hapus?')">Hapus</button>
-          </form>
-        </td>
-      </tr>
-      @endforeach
-    </tbody>
-  </table>
-  <div class="mt-4">{{ $data->links() }}</div>
+
+  @if(session('ok')) <div class="alert alert-success">{{ session('ok') }}</div> @endif
+
+  <div class="card">
+    <div class="card-body p-0">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Nama</th><th>Tipe</th><th>Poin</th><th class="text-end">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          @forelse($data as $row)
+            <tr>
+              <td>{{ $row->nama_jenis }}</td>
+              <td class="text-capitalize">{{ $row->tipe }}</td>
+              <td>{{ $row->poin }}</td>
+              <td class="text-end">
+                <a class="btn btn-sm btn-outline-secondary" href="{{ route('admin.jenis.edit',$row) }}">Edit</a>
+                <form action="{{ route('admin.jenis.destroy',$row) }}" method="POST" class="d-inline"
+                      onsubmit="return confirm('Hapus data ini?')">
+                  @csrf @method('DELETE')
+                  <button class="btn btn-sm btn-outline-danger">Hapus</button>
+                </form>
+              </td>
+            </tr>
+          @empty
+            <tr><td colspan="4" class="text-center text-muted p-4">Belum ada data</td></tr>
+          @endforelse
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer">{{ $data->links() }}</div>
+  </div>
 </div>
 @endsection

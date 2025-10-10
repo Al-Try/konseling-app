@@ -3,6 +3,19 @@
 
 @section('content')
 <div class="container-fluid">
+  <div class="d-flex justify-content-end gap-2 mb-3">
+  <a class="btn btn-outline-secondary" href="{{ route('admin.laporan.rankingGuru') }}">
+    <i class="bi bi-filetype-pdf"></i> Unduh Ranking Guru (PDF)
+  </a>
+  {{-- contoh rekap siswa pertama (jika ada), kamu bisa memindahkan tombol ini ke halaman Siswa --}}
+  @if(($siswaTerbaru->first()))
+    <a class="btn btn-outline-secondary" 
+       href="{{ route('admin.laporan.siswa', $siswaTerbaru->first()->id) }}">
+      <i class="bi bi-filetype-pdf"></i> Rekap Siswa (PDF)
+    </a>
+  @endif
+</div>
+
 
   {{-- KPI --}}
   <div class="row g-3 mb-4">

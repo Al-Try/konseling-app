@@ -1,35 +1,44 @@
 <?php
 
 namespace App\Http\Controllers\Admin;
+
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\Admin\JenisBimbinganRequest;
+use App\Models\JenisBimbingan;
 
 class JenisBimbinganController extends Controller
 {
-    public function index() {
-        $data = JenisBimbingan::orderBy('nama_jenis')->get();
+    public function index()
+    {
+        $data = JenisBimbingan::latest()->paginate(10);
         return view('admin.jenis.index', compact('data'));
     }
-    public function store(Request $r) {
-        $val = $r->validate([
-            'kode'=>['required','alpha_dash','unique:jenis_bimbingans,kode'],
-            'nama_jenis'=>['required','string','max:100'],
-            'poin'=>['required','integer'],
-        ]);
-        JenisBimbingan::create($val);
-        return back()->with('ok','Jenis dibuat');
+
+    public function create()
+    {
+        return view('admin.jenis.create');
     }
-    public function update(Request $r, JenisBimbingan $jenis) {
-        $val = $r->validate([
-            'kode'=>['required','alpha_dash', Rule::unique('jenis_bimbingans','kode')->ignore($jenis->id)],
-            'nama_jenis'=>['required','string','max:100'],
-            'poin'=>['required','integer'],
-        ]);
-        $jenis->update($val);
-        return back()->with('ok','Jenis diperbarui');
+
+    public function store(JenisBimbinganRequest $request)
+    {
+        JenisBimbingan::create($request->validated());
+        return back()->with('success','Jenis bimbingan dibuat.');
     }
-    public function destroy(JenisBimbingan $jenis) {
-        $jenis->delete();
-        return back()->with('ok','Jenis dihapus');
+
+    public function update(JenisBimbinganRequest $request, JenisBimbingan $jenis)
+    {
+        $jenis->update($request->validated());
+        return back()->with('success','Jenis bimbingan diubah.');
+    }
+
+    public function edit(JenisBimbingan $jeni) // binding: parameter dari resource => singular default 'jeni'
+    {
+        return view('admin.jenis.edit', ['jenis' => $jeni]);
+    }
+
+    public function destroy(JenisBimbingan $jeni)
+    {
+        $jeni->delete();
+        return back()->with('ok', 'Jenis bimbingan dihapus.');
     }
 }

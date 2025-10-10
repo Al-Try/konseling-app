@@ -12,8 +12,8 @@ class GuruWali extends Model
     // TABEL: guru_wali (bukan guru_walis)
     protected $table = 'guru_walis';
 
-    // KITA STANDARKAN: nama kolom identitas adalah 'nama_guru'
-    protected $fillable = ['user_id','nip','nama_guru','no_hp','alamat'];
+    // KITA STANDARKAN: nama kolom identitas adalah 'nama guru wali'
+    protected $fillable = ['user_id','nip','nama','no_hp','alamat'];
 
     public function user()
     {

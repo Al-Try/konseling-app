@@ -29,44 +29,40 @@ Route::get('/login',  [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-
 // ---------------------- ADMIN ----------------------
 Route::middleware(['auth','role:admin'])
     ->prefix('admin')->name('admin.')
     ->group(function () {
-        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-        Route::resource('siswa', SiswaController::class);
-        Route::resource('konseling', KonselingController::class)
-            ->only(['index']); // tambah create/store/show kalau siap
-        Route::resource('jenis', JenisBimbinganController::class)
-            ->parameters(['jenis' => 'jenis'])
-            ->names('jenis')
-            ->only(['index']); // nanti tambah store/update/destroy
+        Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class,'index'])
+            ->name('dashboard');
+
+        Route::resource('siswa', \App\Http\Controllers\Admin\SiswaController::class);
+
+        // ➜ Tambahkan ini
+        Route::resource('konseling', \App\Http\Controllers\Admin\KonselingController::class)
+            ->only(['index']);
+
+        Route::resource('jenis', \App\Http\Controllers\Admin\JenisBimbinganController::class);
+
+        Route::get('/laporan/siswa/{siswa}', [\App\Http\Controllers\Admin\LaporanController::class,'rekapSiswa'])
+            ->name('laporan.siswa');
+        Route::get('/laporan/ranking-guru', [\App\Http\Controllers\Admin\LaporanController::class,'rankingGuru'])
+            ->name('laporan.rankingGuru');
     });
-    Route::resource('jenis', \App\Http\Controllers\Admin\JenisBimbinganController::class)
-    ->except(['create','edit','show']); // backend only
-    
-    Route::resource('konseling', \App\Http\Controllers\Admin\KonselingController::class)
-        ->only(['index','show']);
 
 
 // ---------------------- GURU WALI ----------------------
 Route::middleware(['auth','role:guru_wali'])
     ->prefix('guru')->name('guru.')
     ->group(function () {
-        Route::get('/dashboard', fn() => view('dashboard.guru'))->name('dashboard');
+        // ⬇️ Minimal ada 1 dashboard juga supaya redirect role guru aman
+        Route::get('/dashboard', fn () => view('guru_wali.dashboard'))->name('dashboard');
 
-        // kalau sudah bikin controller
-        // Route::resource('bimbingan', BimbinganController::class)->only(['index','create','store','show']);
+        Route::get('/bimbingan/siswa/search', [\App\Http\Controllers\Guru\BimbinganController::class,'siswaSearch'])
+            ->name('bimbingan.siswa.search');
+        Route::resource('bimbingan', \App\Http\Controllers\Guru\BimbinganController::class)
+            ->only(['index','create','store','show']);
     });
-
-    // JSON autocomplete siswa (hanya siswa di kelas/guru terkait kalau kamu batasi)
-Route::get('/siswa/search', [\App\Http\Controllers\Guru\BimbinganController::class, 'siswaSearch'])
-    ->name('siswa.search');
-
-Route::resource('bimbingan', \App\Http\Controllers\Guru\BimbinganController::class)
-    ->only(['index','create','store','show']); // untuk backend, create bisa return JSON metadata
-
 
 
 // ---------------------- DEV-ONLY (opsional) ----------------------
