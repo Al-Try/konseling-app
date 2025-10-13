@@ -10,35 +10,28 @@ use Illuminate\Support\Facades\DB;
 
 class LaporanController extends Controller
 {
-    public function rekapSiswa(Siswa $siswa)
-    {
-        $riwayat = Bimbingan::with(['jenis','guruWali.user'])
-            ->where('siswa_id', $siswa->id)
-            ->orderByDesc('tanggal')
-            ->get();
-
-        $pdf = Pdf::loadView('admin.laporan.rekap_siswa', [
-            'siswa' => $siswa,
-            'riwayat' => $riwayat,
-            'total_poin' => $riwayat->sum('poin'),
-        ])->setPaper('a4');
-
-        return $pdf->download("Rekap-{$siswa->nama_siswa}.pdf");
-    }
-
+    // Ranking guru berdasar jumlah bimbingan
     public function rankingGuru()
     {
-        $ranking = Bimbingan::select('guru_id', DB::raw('COUNT(*) as jumlah'))
+        $data = Bimbingan::select('guru_id', DB::raw('COUNT(*) as jml'))
+            ->with(['guruWali.user:id,name'])
             ->groupBy('guru_id')
-            ->with('guruWali.user')
-            ->orderByDesc('jumlah')
-            ->limit(20)
+            ->orderByDesc('jml')
             ->get();
 
-        $pdf = Pdf::loadView('admin.laporan.ranking_guru', [
-            'ranking' => $ranking,
-        ])->setPaper('a4', 'portrait');
+        $pdf = Pdf::loadView('admin.laporan.ranking_guru', compact('data'));
+        return $pdf->download('ranking-guru.pdf');
+    }
 
-        return $pdf->download("Ranking-Guru-Wali.pdf");
+    // Rekap bimbingan per siswa
+    public function rekapSiswa(Siswa $siswa)
+    {
+        $list = Bimbingan::with(['jenis:id,nama_jenis,poin', 'guruWali.user:id,name'])
+            ->where('siswa_id', $siswa->id)
+            ->orderBy('tanggal')
+            ->get();
+
+        $pdf = Pdf::loadView('admin.laporan.rekap_siswa', compact('siswa', 'list'));
+        return $pdf->download('rekap-siswa-'.$siswa->id.'.pdf');
     }
 }

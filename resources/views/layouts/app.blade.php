@@ -10,8 +10,8 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
-  {{-- DataTables (opsional, gunakan jika perlu tabel interaktif) --}}
-  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css"/>
+  {{-- DataTables v2 (tanpa jQuery) - CSS --}}
+  <link rel="stylesheet" href="https://cdn.datatables.net/v/bs5/dt-2.1.7/datatables.min.css"/>
 
   <style>
     :root{ --sidebar-w: 260px; }
@@ -59,34 +59,28 @@
     <nav class="p-3">
       <div class="small text-uppercase text-secondary mb-2">Menu</div>
 
-      {{-- Dashboard default ke role masing2 --}}
-      <a class="nav-link d-flex align-items-center gap-2 px-3 py-2 mb-1 {{ request()->routeIs('admin.dashboard') || request()->routeIs('guru.dashboard') ? 'active' : '' }}"
-         href="{{ auth()->check() && auth()->user()->role === 'guru_wali' ? route('guru.dashboard') : route('admin.dashboard') }}">
+      {{-- Tautan Dashboard sesuai role --}}
+      <a class="nav-link d-flex align-items-center gap-2 px-3 py-2 mb-1
+         {{ request()->routeIs('admin.dashboard') || request()->routeIs('guru.dashboard') ? 'active' : '' }}"
+         href="{{ auth()->check() && auth()->user()->role === 'guru_wali'
+                ? route('guru.dashboard')
+                : route('admin.dashboard') }}">
         <i class="bi bi-speedometer2"></i> Dashboard
       </a>
 
-      {{-- admin only --}}
       @auth
         @if(auth()->user()->role === 'admin')
-          <a class="nav-link d-flex align-items-center gap-2 px-3 py-2 mb-1 {{ request()->routeIs('admin.siswa.*') ? 'active' : '' }}"
-             href="{{ route('admin.siswa.index') }}">
+          <a href="{{ route('admin.siswa.index') }}" class="nav-link {{ request()->routeIs('admin.siswa.*') ? 'active' : '' }}">
             <i class="bi bi-people"></i> Data Siswa
           </a>
-          <a class="nav-link d-flex align-items-center gap-2 px-3 py-2 mb-1 {{ request()->routeIs('admin.konseling.*') ? 'active' : '' }}"
-             href="{{ route('admin.konseling.index') }}">
-            <i class="bi bi-journal-text"></i> Data Bimbingan
-          </a>
-          <a class="nav-link d-flex align-items-center gap-2 px-3 py-2 mb-1 {{ request()->routeIs('admin.jenis.*') ? 'active' : '' }}"
-             href="{{ route('admin.jenis.index') }}">
+          <a href="{{ route('admin.jenis.index') }}" class="nav-link {{ request()->routeIs('admin.jenis.*') ? 'active' : '' }}">
             <i class="bi bi-sliders"></i> Jenis Bimbingan
           </a>
         @endif
 
-        {{-- guru wali only --}}
         @if(auth()->user()->role === 'guru_wali')
-          <a class="nav-link d-flex align-items-center gap-2 px-3 py-2 mb-1 {{ request()->routeIs('guru.bimbingan.*') ? 'active' : '' }}"
-             href="{{ route('guru.bimbingan.index') }}">
-            <i class="bi bi-journal-plus"></i> Bimbingan Saya
+          <a href="{{ route('guru.bimbingan.index') }}" class="nav-link {{ request()->routeIs('guru.bimbingan.*') ? 'active' : '' }}">
+            <i class="bi bi-journal-text"></i> Bimbingan
           </a>
         @endif
       @endauth
@@ -135,12 +129,16 @@
 {{-- overlay mobile --}}
 <div id="backdrop" class="backdrop" onclick="toggleSidebar()"></div>
 
-{{-- JS: Bootstrap + (opsional) DataTables + helper --}}
+{{-- ===== JS Order yang BENAR ===== --}}
+
+{{-- 1) Bootstrap --}}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-{{-- DataTables (opsional) --}}
-<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+{{-- 2) Chart.js (HARUS sebelum @stack('scripts')) --}}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+{{-- 3) DataTables v2 (tanpa jQuery) - JS --}}
+<script src="https://cdn.datatables.net/v/bs5/dt-2.1.7/datatables.min.js"></script>
 
 <script>
   const sidebar  = document.getElementById('sidebar');
@@ -150,20 +148,16 @@
     backdrop.classList.toggle('show');
   }
 
-  /**
-   * Helper init DataTables sekali panggil:
-   * tambahkan class "datatable" di <table> untuk auto init.
-   * Contoh:
-   * <table class="table datatable"> ... </table>
-   */
+  // Auto init DataTables untuk tabel yang diberi class "datatable"
   document.addEventListener('DOMContentLoaded', () => {
     const tables = document.querySelectorAll('table.datatable');
-    if (typeof bootstrap !== 'undefined' && tables.length) {
+    if (tables.length && typeof DataTable !== 'undefined') {
       tables.forEach(t => new DataTable(t, { pageLength: 10 }));
     }
   });
 </script>
 
+{{-- Script halaman (grafik/JS per page) --}}
 @stack('scripts')
 </body>
 </html>

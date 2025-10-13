@@ -1,92 +1,55 @@
-@extends('layouts.app')
-@section('page_title','Tambah Bimbingan')
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Rekap Bimbingan Siswa</title>
+  <style>
+    body { font-family: DejaVu Sans, sans-serif; font-size: 12px; }
+    h3,h4 { margin: 0 0 8px 0; }
+    .muted { color:#666; }
+    table { width:100%; border-collapse: collapse; margin-top:10px; }
+    th, td { border:1px solid #333; padding:6px; }
+    th { background:#f0f0f0; }
+  </style>
+</head>
+<body>
+  <h3>Rekap Bimbingan Siswa</h3>
+  <table style="border:none">
+    <tr style="border:none">
+      <td style="border:none"><strong>Nama</strong></td>
+      <td style="border:none">: {{ $siswa->nama_siswa }}</td>
+    </tr>
+    <tr style="border:none">
+      <td style="border:none"><strong>Kelas</strong></td>
+      <td style="border:none">: {{ $siswa->kelas?->nama_kelas ?? '-' }}</td>
+    </tr>
+  </table>
 
-@section('content')
-<div class="container-fluid" style="max-width:720px">
-  <h5 class="mb-3">Tambah Bimbingan</h5>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:90px">Tanggal</th>
+        <th>Guru Wali</th>
+        <th>Jenis</th>
+        <th style="width:55px">Poin</th>
+        <th>Catatan</th>
+      </tr>
+    </thead>
+    <tbody>
+      @forelse($list as $b)
+        <tr>
+          <td>{{ \Illuminate\Support\Carbon::parse($b->tanggal)->format('d/m/Y') }}</td>
+          <td>{{ $b->guruWali?->user?->name ?? '-' }}</td>
+          <td>{{ $b->jenis?->nama_jenis ?? '-' }}</td>
+          <td style="text-align:center">{{ $b->jenis?->poin }}</td>
+          <td>{{ $b->catatan }}</td>
+        </tr>
+      @empty
+        <tr><td colspan="5" style="text-align:center">Belum ada data</td></tr>
+      @endforelse
+    </tbody>
+  </table>
 
-  <form method="POST" action="{{ route('guru.bimbingan.store') }}" class="card card-body">
-    @csrf
-    <div class="mb-3">
-      <label class="form-label">Tanggal</label>
-      <input type="date" name="tanggal" value="{{ old('tanggal', now()->toDateString()) }}" class="form-control" required>
-      @error('tanggal') <div class="text-danger small">{{ $message }}</div> @enderror
-    </div>
-
-    <div class="mb-3">
-      <label class="form-label">Cari Siswa</label>
-      <input type="text" id="cari-siswa" class="form-control" placeholder="Ketik nama siswa...">
-      <input type="hidden" name="siswa_id" id="siswa_id" value="{{ old('siswa_id') }}" required>
-      <div id="hint-siswa" class="list-group position-absolute shadow" style="z-index:1000"></div>
-      @error('siswa_id') <div class="text-danger small">{{ $message }}</div> @enderror
-    </div>
-
-    <div class="mb-3">
-      <label class="form-label">Jenis</label>
-      <select name="jenis_id" class="form-select" required>
-        <option value="">-- pilih --</option>
-        @foreach($jenis as $j)
-          <option value="{{ $j->id }}" @selected(old('jenis_id')==$j->id)>
-            {{ $j->nama_jenis }} ({{ $j->poin }})
-          </option>
-        @endforeach
-      </select>
-      @error('jenis_id') <div class="text-danger small">{{ $message }}</div> @enderror
-    </div>
-
-    <div class="mb-3">
-      <label class="form-label">Catatan</label>
-      <textarea name="catatan" rows="4" class="form-control">{{ old('catatan') }}</textarea>
-      @error('catatan') <div class="text-danger small">{{ $message }}</div> @enderror
-    </div>
-
-    <div class="d-flex gap-2">
-      <button class="btn btn-primary">Simpan</button>
-      <a href="{{ route('guru.bimbingan.index') }}" class="btn btn-light">Batal</a>
-    </div>
-  </form>
-</div>
-@endsection
-
-@push('scripts')
-<script>
-  const input = document.getElementById('cari-siswa');
-  const hint  = document.getElementById('hint-siswa');
-  const hid   = document.getElementById('siswa_id');
-
-  let lastQ  = '';
-  let timer  = null;
-
-  input.addEventListener('input', function() {
-    const q = this.value.trim();
-    if (q.length < 2) { hint.innerHTML=''; hint.style.display='none'; return; }
-    clearTimeout(timer);
-    timer = setTimeout(() => fetchSiswa(q), 250);
-  });
-
-  function fetchSiswa(q) {
-    if (q === lastQ) return;
-    lastQ = q;
-    fetch(`{{ route('guru.bimbingan.siswa.search') }}?q=${encodeURIComponent(q)}`)
-      .then(r => r.json())
-      .then(rows => {
-        hint.innerHTML = '';
-        rows.forEach(r => {
-          const a = document.createElement('a');
-          a.href = '#'; a.className = 'list-group-item list-group-item-action';
-          a.textContent = r.text;
-          a.onclick = (e) => { e.preventDefault(); input.value = r.text; hid.value = r.id; hint.innerHTML=''; hint.style.display='none'; }
-          hint.appendChild(a);
-        });
-        hint.style.display = rows.length ? 'block' : 'none';
-      })
-      .catch(() => { hint.innerHTML=''; hint.style.display='none'; });
-  }
-
-  document.addEventListener('click', (e) => {
-    if (!hint.contains(e.target) && e.target !== input) {
-      hint.innerHTML=''; hint.style.display='none';
-    }
-  });
-</script>
-@endpush
+  <p class="muted">Dicetak: {{ now()->format('d/m/Y H:i') }}</p>
+</body>
+</html>

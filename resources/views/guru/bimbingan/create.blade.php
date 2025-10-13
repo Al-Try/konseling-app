@@ -90,3 +90,32 @@
   });
 </script>
 @endpush
+
+
+<input id="cari-siswa" class="form-control" placeholder="Cari siswa...">
+<input type="hidden" name="siswa_id" id="siswa_id">
+
+@push('scripts')
+<script>
+const box  = document.getElementById('cari-siswa');
+const hid  = document.getElementById('siswa_id');
+let timer=null;
+
+box.addEventListener('input', () => {
+  clearTimeout(timer);
+  timer=setTimeout(async()=>{
+    const q = box.value.trim();
+    if(!q){ return; }
+    const url = "{{ route('guru.bimbingan.siswa.search') }}?q="+encodeURIComponent(q);
+    const res = await fetch(url);
+    const data = await res.json();
+    if(data.results?.length){
+      const pick = data.results[0]; // ambil yang pertama (sederhana)
+      box.value = pick.text;
+      hid.value = pick.id;
+    }
+  }, 300);
+});
+</script>
+@endpush
+

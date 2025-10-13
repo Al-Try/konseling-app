@@ -15,7 +15,7 @@ class KonselingController extends Controller
 
         $items = Bimbingan::with([
                 'siswa:id,nama_siswa',
-                'guruWali:id,nama',
+                'guruWali.user:id,nama',
                 'jenis:id,nama_jenis,tipe,poin'
             ])
             ->when($qTanggal, function($w) use ($qTanggal) {
@@ -34,7 +34,7 @@ class KonselingController extends Controller
 
     public function show(Bimbingan $konseling)
     {
-        $konseling->load(['siswa:id,nama_siswa,kelas_id','guruWali:id,nama','jenis:id,nama_jenis,tipe,poin']);
+        $konseling->load(['siswa:id,nama_siswa,kelas_id','guruWali.user:id,nama','jenis:id,nama_jenis,tipe,poin']);
         return response()->json($konseling);
     }
 }

@@ -1,32 +1,34 @@
 @extends('layouts.app')
-
+@section('page_title','Data Bimbingan')
 @section('content')
-<div class="container">
-  <h1>Data Konseling</h1>
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">Data Bimbingan</h5>
+  </div>
 
-  @if($items->count())
-    <table class="table table-bordered">
-      <thead>
-        <tr>
-          <th>#</th><th>Tanggal</th><th>Siswa</th><th>Guru Wali</th><th>Jenis</th><th></th>
-        </tr>
-      </thead>
-      <tbody>
-        @foreach($items as $row)
+  <div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+      <table class="table mb-0 align-middle">
+        <thead class="table-light">
           <tr>
-            <td>{{ $row->id }}</td>
-            <td>{{ $row->created_at?->format('d-m-Y') }}</td>
-            <td>{{ $row->siswa->nama ?? '-' }}</td>
-            <td>{{ $row->guruWali->user->nama ?? '-' }}</td>
-            <td>{{ $row->jenis->nama ?? '-' }}</td>
-            <td><a href="{{ route('admin.konseling.show',$row) }}" class="btn btn-sm btn-primary">Detail</a></td>
+            <th>Tanggal</th><th>Siswa</th><th>Jenis</th><th>Guru</th>
           </tr>
-        @endforeach
-      </tbody>
-    </table>
-    {{ $items->links() }}
-  @else
-    <p>Belum ada data.</p>
-  @endif
+        </thead>
+        <tbody>
+        @forelse($rows as $r)
+          <tr>
+            <td>{{ $r->tanggal?->format('d/m/Y') }}</td>
+            <td>{{ $r->siswa?->nama_siswa }}</td>
+            <td>{{ $r->jenis?->nama_jenis }}</td>
+            <td>{{ $r->guruWali?->user?->name }}</td>
+          </tr>
+        @empty
+          <tr><td colspan="4" class="text-center text-muted py-4">Belum ada data</td></tr>
+        @endforelse
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer bg-white">{{ $rows->links() }}</div>
+  </div>
 </div>
 @endsection

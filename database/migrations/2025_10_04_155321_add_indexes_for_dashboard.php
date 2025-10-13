@@ -9,16 +9,25 @@ return new class extends Migration
     public function up(): void
     {
         // ========= bimbingans =========
-        Schema::table('bimbingans', function (Blueprint $table) {
+
+        
+        //Schema::table('bimbingans', function (Blueprint $table) {
             // indeks single kolom
-            $table->index('tanggal', 'bimbingans_tanggal_idx');
-            $table->index('guru_id', 'bimbingans_guru_id_idx');
-            $table->index('siswa_id', 'bimbingans_siswa_id_idx');
-            $table->index('jenis_id', 'bimbingans_jenis_id_idx');
+            //$table->index('tanggal', 'bimbingans_tanggal_idx');
+            //$table->index('guru_id', 'bimbingans_guru_id_idx');
+            //$table->index('siswa_id', 'bimbingans_siswa_id_idx');
+            //$table->index('jenis_id', 'bimbingans_jenis_id_idx');
 
             // indeks komposit untuk query top & tren
-            $table->index(['guru_id', 'tanggal'], 'bimbingans_guru_tanggal_idx');
-            $table->index(['siswa_id', 'tanggal'], 'bimbingans_siswa_tanggal_idx');
+            //$table->index(['guru_id', 'tanggal'], 'bimbingans_guru_tanggal_idx');
+            //$table->index(['siswa_id', 'tanggal'], 'bimbingans_siswa_tanggal_idx');
+        //});
+
+        Schema::table('bimbingans', function (Blueprint $t) {
+            $t->index('tanggal');
+            $t->index('siswa_id');
+            $t->index('guru_id');
+            $t->index('jenis_id');
         });
 
         // ========= siswas =========
